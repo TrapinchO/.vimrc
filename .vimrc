@@ -15,6 +15,9 @@ nnoremap <C-l> <C-w>l
 nnoremap <C-j> <C-w>j
 nnoremap <C-k> <C-w>k
 
+" https://vi.stackexchange.com/a/16969
+inoremap jk <Esc>
+
 " https://www.freecodecamp.org/news/vimrc-configuration-guide-customize-your-vim-editor/
 " the next three things
 
@@ -36,6 +39,3 @@ set autoindent
 set smartindent
 " helper for indent mistake
 set list listchars=tab:»·,trail:·
-
-
-
