@@ -57,7 +57,14 @@ vim.g.godot_executable = 'C:\\Programy\\Godot\\NoNET'
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-  local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+  local out = vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "--branch=stable",
+    lazyrepo,
+    lazypath
+  })
   if vim.v.shell_error ~= 0 then
     vim.api.nvim_echo({
       { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
@@ -69,6 +76,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   end
 end
 vim.opt.rtp:prepend(lazypath)
+
 
 
 -- Setup lazy.nvim
@@ -127,28 +135,57 @@ require("lazy").setup({
 },
 
 
-{ "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
+-- NOTE: enabling this crashes the internals when editing C files
+-- resulting in no highlighting and bunch of other errors
+--{ "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {} },
+
 { "jiangmiao/auto-pairs" },
 {
     "sudormrfbin/cheatsheet.nvim",
     dependencies = {
-        "nvim-telescope/telescope.nvim",
         "nvim-lua/popup.nvim",
         "nvim-lua/plenary.nvim",
     },
+},
+{
+    "nvim-telescope/telescope.nvim",
 },
 
 
 { "habamax/vim-godot"},
 
-{ "rose-pine/neovim", name = "rose-pine" }
+{ "rose-pine/neovim", name = "rose-pine" },
+
+{
+    "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
+
+    config = function()
+local opts = {
+  ensure_installed = {
+    'c',
+    'lua',
+    'vim',
+    'vimdoc',
+    'query',
+    'markdown',
+    'markdown_inline',
+  },
+  disable = {
+    'python',
+  },
+}
+  require('nvim-treesitter.configs').setup(opts)
+    end,
+
+},
 
 --[[
 {
     "xiantang/darcula-dark.nvim",
-    dependencies = {
-        "nvim-treesitter/nvim-treesitter",
-    },
+    --dependencies = {
+    --    "nvim-treesitter/nvim-treesitter",
+    --},
 },
 --]]
 --[[
@@ -173,7 +210,7 @@ require("lazy").setup({
   },
   keys = {
     {
-      "<leader>.",
+      "<leader>a",
       function()
         require("which-key").show({ global = false })
       end,
@@ -204,6 +241,7 @@ local servers = {
     "gdscript",
     --'ts_ls',
     --'pyright',
+    'pylsp',
     --'hls',
     --'html',
     --'jsonls',
@@ -258,5 +296,36 @@ vim.lsp.handlers['textDocument/publishDiagnostics'] = vim.lsp.with(vim.lsp.diagn
 
 vim.cmd [[colorscheme rose-pine]] -- gives the good old scheme; also enables syntax hihglight for some reason
 
+
+
+
+-- FINALLYYYYYYYYYYYYYYYYYY
+-- otherwise I got error EVERY time I tried to open the menu
+-- https://github.com/nvim-telescope/telescope.nvim/wiki/Configuration-Recipes#disable-highlighting-for-certain-files
+local previewers = require("telescope.previewers")
+
+local _bad = { ".*%.py", ".*txt" } -- Put all filetypes that slow you down in this array
+local bad_files = function(filepath)
+  for _, v in ipairs(_bad) do
+    if filepath:match(v) then
+      return false
+    end
+  end
+
+  return true
+end
+
+local new_maker = function(filepath, bufnr, opts)
+  opts = opts or {}
+  if opts.use_ft_detect == nil then opts.use_ft_detect = true end
+  opts.use_ft_detect = opts.use_ft_detect == false and false or bad_files(filepath)
+  previewers.buffer_previewer_maker(filepath, bufnr, opts)
+end
+
+require("telescope").setup {
+  defaults = {
+    buffer_previewer_maker = new_maker,
+  }
+}
 
 
