@@ -162,13 +162,13 @@ require("lazy").setup({
     config = function()
 local opts = {
   ensure_installed = {
-    'c',
-    'lua',
     'vim',
     'vimdoc',
     'query',
-    'markdown',
-    'markdown_inline',
+    --'c',
+    --'lua',
+    --'markdown',
+    --'markdown_inline',
   },
   disable = {
     'python',
